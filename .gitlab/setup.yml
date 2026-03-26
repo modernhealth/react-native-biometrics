@@ -1,0 +1,22 @@
+# GitLab equivalent of .github/actions/setup/action.yml
+# Reusable setup template for Node.js and dependencies
+
+.setup:
+  image: node:lts
+  before_script:
+    # Read Node.js version from .nvmrc if specific version needed
+    - |
+      if [ -f .nvmrc ]; then
+        NODE_VERSION=$(cat .nvmrc)
+        echo "Project requires Node.js $NODE_VERSION"
+      fi
+    # Install dependencies
+    - yarn install --immutable
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - node_modules/
+      - .yarn/install-state.gz
+    policy: pull-push

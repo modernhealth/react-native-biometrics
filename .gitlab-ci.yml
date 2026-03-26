@@ -1,0 +1,185 @@
+# GitLab CI equivalent of .github/workflows/ci.yml
+
+include:
+  - local: '.gitlab/setup.yml'
+  - project: modernhealth/ci-templates/commit-lint
+    file: ci-template.yaml
+
+stages:
+  - lint
+  - test
+  - build
+  - publish
+
+variables:
+  TURBO_CACHE_DIR: .turbo
+  HUSKY: 0
+  GITLAB_ACCESS_TOKEN: $CI_JOB_TOKEN
+  FF_USE_FASTZIP: "true"
+  TRANSFER_METER_FREQUENCY: 5s
+
+# Reusable anchors
+.rules: &rules
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+.npm_registry_auth: &npm_registry_auth
+  - echo "@modernhealth:registry=https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/" >> .npmrc
+  - echo "//gitlab.com/api/v4/packages/npm/:_authToken=${GITLAB_ACCESS_TOKEN}" >> .npmrc
+  - echo "//gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${GITLAB_ACCESS_TOKEN}" >> .npmrc
+
+# iOS job template for macOS runners
+.ios_job:
+  tags:
+    - saas-macos-medium-m1
+  image: macos-15-xcode-16
+  variables:
+    TURBO_CACHE_DIR: .turbo/ios
+    YARN_CACHE_FOLDER: './caches/yarn'
+    LC_ALL: en_US.UTF-8
+    LANG: en_US.UTF-8
+  before_script:
+    - mkdir -p $YARN_CACHE_FOLDER
+    - npm install -g yarn
+    - yarn install --immutable
+    - cd example
+    - bundle install
+    - cd ..
+  cache:
+    - key:
+        files:
+          - yarn.lock
+      paths:
+        - $YARN_CACHE_FOLDER
+    - key:
+        files:
+          - example/Gemfile.lock
+      paths:
+        - example/vendor/bundle
+    - key:
+        files:
+          - yarn.lock
+          - example/ios/Podfile.lock
+      paths:
+        - example/ios/Pods
+
+# Workflow rules - equivalent to GitHub's on: push/pull_request/merge_group
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
+
+# Commit lint
+Lint Commits:
+  before_script:
+    - ""
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+  extends: .commit_lint
+
+lint:
+  extends: .setup
+  stage: lint
+  <<: *rules
+  script:
+    - yarn lint
+    - yarn typecheck
+
+test:
+  extends: .setup
+  stage: test
+  <<: *rules
+  script:
+    - yarn test --maxWorkers=2 --coverage
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    when: always
+    paths:
+      - coverage/cobertura-coverage.xml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+
+build-library:
+  extends: .setup
+  stage: build
+  <<: *rules
+  script:
+    - yarn prepare
+
+build-android:
+  extends: .setup
+  stage: build
+  <<: *rules
+  image: cimg/android:2024.01.1-node
+  variables:
+    TURBO_CACHE_DIR: .turbo/android
+    JAVA_OPTS: '-XX:MaxHeapSize=6g'
+  before_script:
+    # Fix permissions on cached node_modules (may have been created by different user/job)
+    - rm -rf node_modules/.yarn-state.yml node_modules/.cache 2>/dev/null || true
+    - yarn install --immutable
+    # Accept Android SDK licenses
+    - yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
+  script:
+    - |
+      TURBO_CACHE_STATUS=$(node -p "($(yarn turbo run build:android --cache-dir=\"${TURBO_CACHE_DIR}\" --dry=json)).tasks.find(t => t.task === 'build:android').cache.status" || echo "MISS")
+      echo "Turbo cache status: $TURBO_CACHE_STATUS"
+    - yarn turbo run build:android --cache-dir="${TURBO_CACHE_DIR}"
+  cache:
+    - key:
+        prefix: android-node
+        files:
+          - yarn.lock
+      paths:
+        - node_modules/
+        - .yarn/install-state.gz
+      policy: pull-push
+    - key: android-turbo-$CI_COMMIT_REF_SLUG
+      paths:
+        - .turbo/android/
+      policy: pull-push
+    - key:
+        files:
+          - example/android/gradle/wrapper/gradle-wrapper.properties
+      paths:
+        - ~/.gradle/wrapper/
+        - ~/.gradle/caches/
+      policy: pull-push
+
+build-ios:
+  extends: .ios_job
+  stage: build
+  <<: *rules
+  interruptible: true
+  script:
+    - |
+      TURBO_CACHE_STATUS=$(node -p "($(yarn turbo run build:ios --cache-dir=\"${TURBO_CACHE_DIR}\" --dry=json)).tasks.find(t => t.task === 'build:ios').cache.status" || echo "MISS")
+      echo "Turbo cache status: $TURBO_CACHE_STATUS"
+      if [ "$TURBO_CACHE_STATUS" != "HIT" ]; then
+        cd example
+        bundle exec pod install --project-directory=ios
+        cd ..
+      fi
+    - yarn turbo run build:ios --cache-dir="${TURBO_CACHE_DIR}"
+
+# Publish to GitLab Package Registry using semantic-release
+# Runs on main branch after merge, automatically determines version bump from commits
+# Requires GITLAB_TOKEN variable with api scope
+Publish to Registry:
+  extends: .setup
+  stage: publish
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  needs:
+    - build-library
+    - lint
+    - test
+  script:
+    - *npm_registry_auth
+    - yarn release
+
+

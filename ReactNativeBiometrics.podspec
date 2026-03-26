@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.authors      = package["author"]
 
   s.platforms    = { :ios => min_ios_version_supported }
-  s.source       = { :git => "https://github.com/sbaiahmed1/sbaiahmed1-react-native-biometrics.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://gitlab.com/modernhealth/frontend-guild/react-native-biometrics.git", :tag => "v#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,cpp,swift}"
   s.exclude_files = "ios/generated/**/*"

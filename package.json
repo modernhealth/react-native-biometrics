@@ -1,5 +1,5 @@
 {
-  "name": "@sbaiahmed1/react-native-biometrics",
+  "name": "@modernhealth/react-native-biometrics",
   "version": "0.11.0",
   "description": "React Native biometric authentication library for iOS and Android. Easy integration of Face ID, Touch ID, and Fingerprint authentication with TypeScript support. Compatible with new architecture (TurboModules) and Expo. Secure mobile login solution.",
   "main": "./lib/commonjs/index.js",
@@ -38,13 +38,13 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace @sbaiahmed1/react-native-biometrics-example",
+    "example": "yarn workspace @modernhealth/react-native-biometrics-example",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "bob build",
-    "release": "release-it --only-version"
+    "release": "semantic-release"
   },
   "keywords": [
     "react-native",
@@ -76,17 +76,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sbaiahmed1/react-native-biometrics.git"
+    "url": "https://gitlab.com/modernhealth/frontend-guild/react-native-biometrics.git"
   },
-  "author": "Ahmed Sbai <ahmedclubust@gmail.com> (https://github.com/sbaiahmed1)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/sbaiahmed1/react-native-biometrics/issues"
-  },
-  "homepage": "https://github.com/sbaiahmed1/react-native-biometrics#readme",
+  "homepage": "https://gitlab.com/modernhealth/frontend-guild/react-native-biometrics#readme",
+  "author": "Modern Health",
+  "license": "UNLICENSED",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
+    "access": "restricted",
+    "@modernhealth:registry": "https://gitlab.com/api/v4/projects/78005459/packages/npm/"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.6.0",
@@ -97,10 +94,11 @@
     "@react-native-community/cli": "15.0.0-alpha.2",
     "@react-native/babel-preset": "0.79.2",
     "@react-native/eslint-config": "^0.78.0",
-    "@release-it/conventional-changelog": "^9.0.4",
+    "@semantic-release/gitlab": "^13.2.3",
     "@types/jest": "^29.5.5",
     "@types/react": "^19.0.0",
     "commitlint": "^19.6.1",
+    "conventional-changelog-conventionalcommits": "^8.0.0",
     "del-cli": "^5.1.0",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
@@ -110,7 +108,8 @@
     "react": "19.0.0",
     "react-native": "0.79.2",
     "react-native-builder-bob": "^0.40.12",
-    "release-it": "^19.1.0",
+    "semantic-release": "^24.2.1",
+    "semantic-release-slack-bot": "^4.0.2",
     "ts-jest": "^29.4.0",
     "turbo": "^1.10.7",
     "typescript": "^5.8.3"
@@ -127,25 +126,6 @@
     "extends": [
       "@commitlint/config-conventional"
     ]
-  },
-  "release-it": {
-    "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
-    },
-    "npm": {
-      "publish": true
-    },
-    "github": {
-      "release": true
-    },
-    "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": {
-          "name": "angular"
-        }
-      }
-    }
   },
   "prettier": {
     "quoteProps": "consistent",

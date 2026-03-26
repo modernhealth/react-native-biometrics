@@ -62,6 +62,16 @@ class ReactNativeBiometricsModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
+  fun verifyKeySignature(keyAlias: String?, data: String, promptTitle: String?, promise: Promise) {
+    sharedImpl.verifyKeySignature(keyAlias, data, promptTitle, null, "Cancel", promise)
+  }
+
+  @ReactMethod
+  fun verifyKeySignature(keyAlias: String?, data: String, promptTitle: String?, promptSubtitle: String?, promise: Promise) {
+    sharedImpl.verifyKeySignature(keyAlias, data, promptTitle, promptSubtitle, "Cancel", promise)
+  }
+
+  @ReactMethod
   fun verifyKeySignature(keyAlias: String?, data: String, promptTitle: String?, promptSubtitle: String?, cancelButtonText: String?, promise: Promise) {
     sharedImpl.verifyKeySignature(keyAlias, data, promptTitle, promptSubtitle, cancelButtonText, promise)
   }

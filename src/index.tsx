@@ -502,7 +502,7 @@ export function configure(config: BiometricConfig): Promise<void> {
 // Export types for TypeScript users
 export type BiometricSensorInfo = {
   available: boolean;
-  biometryType?: 'Biometrics' | 'FaceID' | 'TouchID' | 'None' | 'Unknown';
+  biometryType?: string;
   error?: string;
   errorCode?: string;
   fallbackUsed?: boolean;
@@ -619,7 +619,7 @@ export type DeviceIntegrityResult = {
   isKeyguardSecure?: boolean;
   hasSecureHardware?: boolean;
   isCompromised: boolean;
-  riskLevel: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
+  riskLevel: string;
   error?: string;
 };
 

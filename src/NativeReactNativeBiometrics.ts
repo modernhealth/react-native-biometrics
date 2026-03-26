@@ -16,14 +16,14 @@ export type BiometricChangeEvent = {
 };
 
 export interface Spec extends TurboModule {
-  isSensorAvailable(biometricStrength?: 'weak' | 'strong'): Promise<{
+  isSensorAvailable(biometricStrength?: string): Promise<{
     available: boolean;
-    biometryType?: 'Biometrics' | 'FaceID' | 'TouchID' | 'None' | 'Unknown';
+    biometryType?: string;
     error?: string;
   }>;
   simplePrompt(
     promptMessage: string,
-    biometricStrength?: 'weak' | 'strong'
+    biometricStrength?: string
   ): Promise<{
     success: boolean;
     error?: string;
@@ -37,7 +37,7 @@ export interface Spec extends TurboModule {
     cancelLabel?: string;
     disableDeviceFallback?: boolean;
     allowDeviceCredentials?: boolean;
-    biometricStrength?: 'weak' | 'strong';
+    biometricStrength?: string;
   }): Promise<{
     success: boolean;
     error?: string;
@@ -46,7 +46,7 @@ export interface Spec extends TurboModule {
   createKeys(
     keyAlias?: string | null,
     keyType?: string | null,
-    biometricStrength?: 'weak' | 'strong' | null
+    biometricStrength?: string | null
   ): Promise<{
     publicKey: string;
   }>;
@@ -144,7 +144,7 @@ export interface Spec extends TurboModule {
     isKeyguardSecure?: boolean;
     hasSecureHardware?: boolean;
     isCompromised: boolean;
-    riskLevel: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
+    riskLevel: string;
     error?: string;
   }>;
   // Start biometric change detection

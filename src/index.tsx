@@ -1,7 +1,7 @@
 import ReactNativeBiometrics from './NativeReactNativeBiometrics';
 import { logger, LogLevel, type LogEntry } from './logger';
 import { Platform } from 'react-native';
-import { BiometricStrength } from './types';
+import { BiometricStrength, type BiometryType, type RiskLevel } from './types';
 
 export function isSensorAvailable(options?: {
   biometricStrength?: BiometricStrength;
@@ -21,7 +21,10 @@ export function isSensorAvailable(options?: {
             biometryType: result.biometryType,
           }
         );
-        return result;
+        return {
+          ...result,
+          biometryType: result.biometryType as BiometryType,
+        };
       })
       .catch((error) => {
         logger.error(
@@ -40,7 +43,10 @@ export function isSensorAvailable(options?: {
         available: result.available,
         biometryType: result.biometryType,
       });
-      return result;
+      return {
+        ...result,
+        biometryType: result.biometryType as BiometryType,
+      };
     })
     .catch((error) => {
       logger.error(
@@ -95,7 +101,7 @@ export function simplePrompt(
     });
 }
 
-export { BiometricStrength } from './types';
+export { BiometricStrength, type BiometryType, type RiskLevel } from './types';
 
 export function authenticateWithOptions(
   options: BiometricAuthOptions
@@ -452,7 +458,10 @@ export function getDeviceIntegrityStatus(): Promise<DeviceIntegrityResult> {
           riskLevel: result.riskLevel,
         }
       );
-      return result;
+      return {
+        ...result,
+        riskLevel: result.riskLevel as RiskLevel,
+      };
     })
     .catch((error) => {
       logger.error(
@@ -502,7 +511,7 @@ export function configure(config: BiometricConfig): Promise<void> {
 // Export types for TypeScript users
 export type BiometricSensorInfo = {
   available: boolean;
-  biometryType?: string;
+  biometryType?: BiometryType;
   error?: string;
   errorCode?: string;
   fallbackUsed?: boolean;
@@ -619,7 +628,7 @@ export type DeviceIntegrityResult = {
   isKeyguardSecure?: boolean;
   hasSecureHardware?: boolean;
   isCompromised: boolean;
-  riskLevel: string;
+  riskLevel: RiskLevel;
   error?: string;
 };
 
